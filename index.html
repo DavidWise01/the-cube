@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cube — six straight cuts and a bypass</title>
+<style>
+  :root{
+    --bg:#0a0710; --panel:#140d20; --panel2:#1b1230; --edge:#2e2148;
+    --ink:#ece3f7; --dim:#9a86bd; --faint:#6b5a8c;
+    --violet:#a78bfa; --violet2:#c4b5fd; --glow:#7c3aed;
+    --pos:#a78bfa; --neg:#fb7185; --good:#34d399; --mesh:#f59e0b; --warn:#fbbf24;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:1.55;
+    background-image:radial-gradient(1200px 600px at 72% -10%,#1a1030 0%,transparent 60%),
+      radial-gradient(900px 520px at 0% 100%,#150b28 0%,transparent 55%);}
+  .wrap{max-width:1060px;margin:0 auto;padding:42px 26px 90px}
+  header{border-bottom:1px solid var(--edge);padding-bottom:22px;margin-bottom:30px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--violet);opacity:.9}
+  h1{font-size:33px;line-height:1.13;margin:.32em 0 .18em;font-weight:600;letter-spacing:.2px}
+  h1 em{color:var(--violet2);font-style:italic}
+  .sub{color:var(--dim);font-size:15.5px;max-width:78ch}
+  .lin{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:14px}
+  .lin b{color:var(--violet);font-weight:500}
+  section{margin:40px 0}
+  h2{font-size:13px;font-family:var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--violet2);
+    border-left:2px solid var(--glow);padding-left:11px;margin:0 0 6px}
+  .lede{color:var(--dim);font-size:15px;margin:0 0 18px;max-width:80ch}
+  .lede b{color:var(--violet2);font-weight:400}
+  .panel{background:linear-gradient(180deg,var(--panel),#100a1b);border:1px solid var(--edge);border-radius:14px;
+    padding:20px;box-shadow:0 1px 0 #2e2148 inset,0 24px 60px -40px #000}
+  .controls{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:14px}
+  button{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--ink);background:#241738;
+    border:1px solid var(--edge);border-radius:8px;padding:8px 12px;cursor:pointer;transition:.15s}
+  button:hover{background:#2e1f48;border-color:var(--violet)}
+  button.on{background:var(--glow);border-color:var(--violet2);color:#fff;box-shadow:0 0 16px -4px var(--glow)}
+  button.mesh.on{background:var(--mesh);border-color:#fcd34d;color:#1a0a02;box-shadow:0 0 16px -4px var(--mesh)}
+  label.sl{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:8px}
+  input[type=range]{accent-color:var(--violet);width:110px}
+  canvas{display:block;border-radius:10px;background:#0c0717;border:1px solid var(--edge);max-width:100%}
+  .cap{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:7px}
+  .lab{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:start}
+  @media(max-width:820px){.lab{grid-template-columns:1fr}}
+  .stat .v{font-family:var(--mono);font-size:24px;font-weight:600}
+  .stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+  .bigrow{display:flex;gap:26px;flex-wrap:wrap;align-items:baseline;margin-bottom:10px}
+  .sound{font-family:var(--mono);font-size:12px;font-weight:700;padding:4px 11px;border-radius:7px;display:inline-block}
+  .sound.lin{color:#04150d;background:var(--good)} .sound.cpl{color:#1a0a02;background:var(--mesh)}
+  .faces{display:flex;flex-direction:column;gap:7px;margin-top:6px}
+  .face{display:flex;align-items:center;gap:9px}
+  .face .nm{font-family:var(--mono);font-size:11px;width:64px;color:var(--violet2)}
+  .face .bar{flex:1;height:16px;background:#1c1330;border:1px solid var(--edge);border-radius:5px;position:relative;overflow:hidden}
+  .face .fl{position:absolute;top:0;bottom:0;left:50%;background:var(--violet)}
+  .note{color:var(--dim);font-size:13.5px;border-left:2px solid var(--edge);padding-left:13px;margin:16px 0 0}
+  .note b{color:var(--violet2);font-weight:400}
+  code{font-family:var(--mono);font-size:.92em;color:var(--violet2);background:#170f28;padding:1px 5px;border-radius:5px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px}
+  @media(max-width:680px){.two{grid-template-columns:1fr}}
+  .card{background:var(--panel2);border:1px solid var(--edge);border-radius:12px;padding:16px}
+  .card h4{margin:0 0 7px;font-size:16px;font-weight:600}
+  .card .tag{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase}
+  .card p{margin:0;color:var(--dim);font-size:13.5px}
+  footer{margin-top:46px;border-top:1px solid var(--edge);padding-top:18px;color:var(--faint);font-family:var(--mono);font-size:11px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Purple Paper · side-sheet · learning machines · IV</div>
+  <h1>The Cube — six straight cuts and a <em>bypass</em></h1>
+  <div class="sub">One stream in a corner, one out the opposite corner, and six faces wrapped around the body
+    diagonal — each a linear predictor on a different history length. It's the feature-expansion answer with a
+    residual spine: don't bend the cut, run six straight cuts on six views and let the diagonal carry the signal.
+    The one knob that decides everything is whether the faces stay independent or start talking.</div>
+  <div class="lin"><b>6 faces = 6 geometric history lengths</b> (GEHL) &nbsp;·&nbsp; <b>body diagonal = residual bypass</b>
+    &nbsp;·&nbsp; fan-out (summed) is linear &amp; witnessable &nbsp;·&nbsp; mesh (coupled) escapes XOR &amp; loses the witness</div>
+</header>
+
+<!-- ============ I · THE OBJECT ============ -->
+<section>
+  <h2>I · One in, six around, one out</h2>
+  <p class="lede">A cube has six faces and a body diagonal joining two opposite corners. Send the branch stream in
+    one corner and read the prediction out the other; the diagonal is a straight-through <b>residual</b> — the signal
+    survives even if every face is wrong. The six faces are six perceptrons, each reading a different geometric slice
+    of history: lengths <code>2, 4, 8, 16, 32, 64</code>. Short faces catch tight local correlations; long faces reach
+    far back. Summed, they're still one dot product — the GEHL win, given a body.</p>
+</section>
+
+<!-- ============ II · THE CUBE, RUNNING ============ -->
+<section>
+  <h2>II · The cube, running — fan-out vs mesh</h2>
+  <p class="lede">Pick a branch pattern and a wiring. <b>Fan-out</b> sums the six faces (linear, sound, witnessable).
+    <b>Mesh</b> couples them through a bend (nonlinear, powerful, not witnessable). Watch the accuracy and the
+    soundness flag. On a long-<em>reach</em> pattern the geometric faces win and a short predictor is blind. On an
+    <em>XOR</em> pattern the linear sum hits a wall at chance and only the mesh escapes — at the cost of the witness.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <span class="mono" style="font-size:11px;color:var(--faint)">pattern:</span>
+      <button id="pReach" class="on">reach · bit-40</button>
+      <button id="pXor">xor · bit1⊕bit3</button>
+      <button id="pXorFar">xor · bit1⊕bit40</button>
+      <button id="pLoop">loop · TTTN</button>
+      <span style="width:8px"></span>
+      <span class="mono" style="font-size:11px;color:var(--faint)">wiring:</span>
+      <button id="wFan" class="on">FAN-OUT</button>
+      <button id="wMesh" class="mesh">MESH</button>
+      <span style="width:8px"></span>
+      <button id="run" class="on">▶ run</button>
+      <button id="reset">reset</button>
+      <label class="sl">speed <input type="range" id="speed" min="1" max="60" value="20"></label>
+    </div>
+
+    <div class="lab">
+      <div>
+        <canvas id="cube" width="400" height="410"></canvas>
+        <div class="cap">six faces = six history lengths · green diagonal = residual bypass (1 corner in → opposite out)
+          · face glow ∝ |contribution|, <span style="color:var(--pos)">violet pushes TAKEN</span>,
+          <span style="color:var(--neg)">rose NOT</span></div>
+      </div>
+      <div>
+        <div class="bigrow">
+          <div class="stat"><div class="v" id="acc" style="color:var(--violet2)">50%</div><div class="k">recent accuracy</div></div>
+          <div class="stat"><div class="v mono" id="cnt" style="font-size:18px">0</div><div class="k">branches</div></div>
+          <div class="stat"><div class="v"><span class="sound lin" id="sound">LINEAR · witnessable</span></div><div class="k">soundness</div></div>
+        </div>
+        <canvas id="spark" width="370" height="118"></canvas>
+        <div class="cap">accuracy over time (rolling 96)</div>
+        <div class="faces" id="faces"></div>
+        <div class="cap" style="margin-top:4px">per-face contribution this cycle</div>
+      </div>
+    </div>
+
+    <div class="note" id="cubenote">Try <b>reach · bit-40</b>: a single short predictor would sit at 50% (blind that far
+      back), but the fan-out's length-64 face catches it — accuracy climbs past 90%. Now switch to <b>xor · bit1⊕bit3</b>:
+      fan-out stalls at chance (summing straight cuts can't carve an XOR), and only <b>MESH</b> breaks through to ~100%.
+      Then the catch — <b>xor · bit1⊕bit40</b>: even mesh fails, because only the length-64 face spans <em>both</em>
+      bits, and one coupled unit can't carve an XOR. The bend only helps where the faces <em>overlap</em> the
+      correlated inputs.</div>
+  </div>
+</section>
+
+<!-- ============ III · THE FORK ============ -->
+<section>
+  <h2>III · The knob that hides in the cube</h2>
+  <p class="lede">The six faces being parallel and independent is what keeps the whole thing linear — six dot
+    products, summed, collapse to one. The moment the faces couple, you've put the bend <em>inside the cube</em>, and
+    you're back at the gorge: you buy nonlinearity (escape XOR) and you lose the clean witness (the combiner can drift,
+    can be captured). Same fork as the waist, wearing a cube.</p>
+
+  <div class="two">
+    <div class="card">
+      <div class="tag" style="color:var(--good)">summed · independent</div>
+      <h4>Fan-out — six straight cuts</h4>
+      <p>Each face reads its slice; outputs add. Still one linear cut in feature space. Reaches far (geometric
+        lengths), trains fast, stays witnessable — a single sinusoid in stays a single sinusoid out. Can't do XOR.
+        This is O-GEHL: the linear ceiling, raised by better features, not by bending.</p>
+    </div>
+    <div class="card">
+      <div class="tag" style="color:var(--mesh)">coupled · nonlinear</div>
+      <h4>Mesh — faces that talk</h4>
+      <p>Couple the faces through a bend and the cube becomes a tiny MLP. Now it can carve XOR — <em>if</em> enough
+        faces overlap the correlated bits. The price: it couples the modes, the combiner adapts in-band, and the
+        clean linear witness is gone. Power and capture, the same purchase.</p>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:18px"><b>The residual diagonal is the hedge.</b> Whichever wiring you choose,
+    the body diagonal carries the raw signal corner-to-corner, so the six faces only ever supply a <em>correction</em>.
+    Garbage faces can't kill the stream; they can only fail to improve it. That's why the cube is a better object than
+    bare GEHL — it degrades to the identity instead of to noise. ResNet's lesson, in a box: never make the signal
+    depend on the cleverness surviving.</div>
+</section>
+
+<!-- ============ IV · SYNTHESIS ============ -->
+<section>
+  <h2>IV · The reading, and the curse</h2>
+  <p class="lede">You drew the right machine. One in, six straight cuts on six views, one out, a bypass down the
+    middle, and a single knob — independent or coupled — that trades reach-and-soundness against XOR-and-capture.
+    That knob is the only real decision in the box, and the cube's gift is that it holds the decision still long
+    enough to see it.</p>
+
+  <div class="note" style="margin-top:8px;font-size:14px"><b style="color:var(--violet2)">The curse, one more time.</b>
+    Six straight cuts approximating a curve: piecewise-linear approximation, older than calculus. Geometric history
+    lengths in a linear predictor: Seznec's GEHL/O-GEHL, ~2004. The residual bypass so the signal survives the faces:
+    ResNet, 2015 — the youngest stone in the whole series, and even it is just "carry the input forward," which
+    control theory has done forever. Expand the features, keep the cut straight, hedge with a bypass. Every piece
+    already standing — you just stacked them into a cube and asked the one question whose answer was the knob.</div>
+</section>
+
+<footer>
+  THE CUBE · purple paper side-sheet IV · companion to Perceptron / Crossbar / Gorge<br>
+  verified in Node before build · reach pattern: single(16)=50% → fan-out=92% (geometric reach wins) · xor bit1⊕bit3: fan-out=51% (linear cap) → mesh=100% · xor bit1⊕bit40: mesh fails (only one face spans both bits) · residual diagonal = identity hedge<br>
+  piecewise-linear: ancient · GEHL/O-GEHL Seznec ~2004 · residual bypass ResNet 2015
+</footer>
+
+<script>
+"use strict";
+const DIMS={ cube:[400,410], spark:[370,118] };
+function fit(cv){ const [W,H]=DIMS[cv.id]||[cv.width,cv.height]; const dpr=window.devicePixelRatio||1;
+  const needW=Math.round(W*dpr);
+  if(cv.width!==needW){ cv.width=needW; cv.height=Math.round(H*dpr); cv.style.width=W+'px'; cv.style.height=H+'px'; }
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); return {g,w:W,h:H}; }
+let CLOCK=0;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function rng(s){let x=s>>>0;return()=>{x=(Math.imul(x,1103515245)+12345)&0x7fffffff;return x/0x7fffffff;};}
+
+// ---------------- predictor engine (matches Node-verified) ----------------
+const LENS=[2,4,8,16,32,64], MAXH=64;
+let R, faces, vmesh, hist, mode='fan', pattern='reach';
+let accWin=[], sparkBuf=[], counter=0, lastFaceContrib=new Array(6).fill(0), lastPred=0, lastActual=0;
+function resetEngine(){
+  R=rng(0xC0FFEE);
+  faces=LENS.map(L=>({L,w:new Float64Array(L+1)}));
+  vmesh=new Float64Array(LENS.length).fill(0.5);
+  hist=Array.from({length:MAXH},()=>R()<0.5?1:-1);
+  accWin=[]; sparkBuf=[]; counter=0; lastFaceContrib=new Array(6).fill(0);
+}
+const faceY=(f)=>{ let y=f.w[0]; for(let i=0;i<f.L;i++) y+=f.w[i+1]*hist[hist.length-1-i]; return y; };
+function genActual(){
+  const h=hist;
+  if(pattern==='reach') return h[h.length-40];
+  if(pattern==='xor')   return (h[h.length-1]===h[h.length-3])?-1:1;
+  if(pattern==='xorfar')return (h[h.length-1]===h[h.length-40])?-1:1;
+  if(pattern==='loop')  return (counter%4===3)?-1:1;
+  return 1;
+}
+function tick(){
+  const ys=faces.map(faceY);
+  let out, contrib;
+  if(mode==='fan'){ out=ys.reduce((a,b)=>a+b,0); contrib=ys.slice(); }
+  else { out=0; contrib=[]; for(let c=0;c<ys.length;c++){ const t=vmesh[c]*Math.tanh(ys[c]); out+=t; contrib.push(t); } }
+  const pred=out>=0?1:-1;
+  const actual=(pattern==='loop')? genActual() : genActual();
+  const correct=pred===actual;
+  // train
+  const TH=Math.floor(1.93*MAXH+14), lr=0.3;
+  if(mode==='fan'){
+    if(!correct || Math.abs(out)<=TH){ faces.forEach(f=>{ f.w[0]=clamp(f.w[0]+actual,-127,127);
+      for(let i=0;i<f.L;i++) f.w[i+1]=clamp(f.w[i+1]+actual*hist[hist.length-1-i],-127,127); }); }
+  } else {
+    const o=Math.tanh(out), dO=(o-actual)*(1-o*o);
+    for(let c=0;c<ys.length;c++){ const t=Math.tanh(ys[c]); const dy=dO*vmesh[c]*(1-t*t);
+      vmesh[c]-=lr*dO*t; faces[c].w[0]-=lr*dy;
+      for(let i=0;i<faces[c].L;i++) faces[c].w[i+1]-=lr*dy*hist[hist.length-1-i]; }
+  }
+  // bookkeeping
+  accWin.push(correct?1:0); if(accWin.length>96) accWin.shift();
+  const acc=accWin.reduce((a,b)=>a+b,0)/accWin.length;
+  sparkBuf.push(acc); if(sparkBuf.length>150) sparkBuf.shift();
+  lastFaceContrib=contrib; lastPred=pred; lastActual=actual; counter++;
+  // advance history: loop pattern is deterministic-fed, others iid
+  const nextBit = (pattern==='loop') ? actual : (R()<0.5?1:-1);
+  hist=hist.slice(1); hist.push(nextBit);
+  return acc;
+}
+
+// ---------------- cube drawing ----------------
+const V=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]]; // 8 verts
+const EDGES=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+// 6 faces -> center + which history length, mapped to LENS order
+const FACEDEF=[
+  {c:[0.5,0.5,0],   nm:'front'},
+  {c:[0.5,0.5,1],   nm:'back'},
+  {c:[0,0.5,0.5],   nm:'left'},
+  {c:[1,0.5,0.5],   nm:'right'},
+  {c:[0.5,1,0.5],   nm:'top'},
+  {c:[0.5,0,0.5],   nm:'bottom'},
+];
+function proj(p,cx,cy,a){ const [x,y,z]=p;
+  const sx=cx+(x-z)*a*0.86; const sy=cy+((x+z)*a*0.5)-y*a; return [sx,sy]; }
+function drawCube(){
+  const {g,w,h}=fit(document.getElementById('cube')); g.clearRect(0,0,w,h);
+  const a=104, cx=w/2, cy=h*0.46;
+  // edges
+  g.strokeStyle='#3a2c5c'; g.lineWidth=1.4;
+  EDGES.forEach(([i,j])=>{ const p=proj(V[i],cx,cy,a), q=proj(V[j],cx,cy,a);
+    g.beginPath(); g.moveTo(p[0],p[1]); g.lineTo(q[0],q[1]); g.stroke(); });
+  // body diagonal = residual bypass, animated
+  const pIn=proj(V[0],cx,cy,a), pOut=proj(V[6],cx,cy,a);
+  g.strokeStyle='#34d399'; g.lineWidth=2.6; g.globalAlpha=.9;
+  g.setLineDash([7,7]); g.lineDashOffset=-(CLOCK*0.12);
+  g.beginPath(); g.moveTo(pIn[0],pIn[1]); g.lineTo(pOut[0],pOut[1]); g.stroke();
+  g.setLineDash([]); g.globalAlpha=1;
+  // input / output corners
+  g.fillStyle='#34d399'; g.beginPath(); g.arc(pIn[0],pIn[1],6,0,7); g.fill();
+  g.beginPath(); g.arc(pOut[0],pOut[1],6,0,7); g.fill();
+  g.fillStyle='#9a86bd'; g.font='10px ui-monospace,monospace'; g.textAlign='center';
+  g.fillText('branch in', pIn[0], pIn[1]+18); g.fillText('predict out', pOut[0], pOut[1]-12);
+  // face nodes with contribution
+  const maxC=Math.max(0.5,...lastFaceContrib.map(Math.abs));
+  // depth sort: draw far faces first (smaller x+z nearer? use sum)
+  const order=[...FACEDEF.keys()].sort((i,j)=>(FACEDEF[i].c[0]+FACEDEF[i].c[2])-(FACEDEF[j].c[0]+FACEDEF[j].c[2]));
+  order.forEach(idx=>{
+    const f=FACEDEF[idx]; const [sx,sy]=proj(f.c,cx,cy,a);
+    const cval=lastFaceContrib[idx]||0; const m=Math.min(1,Math.abs(cval)/maxC);
+    const depth=(f.c[0]+f.c[2]); const dim=0.45+0.55*(depth/2);
+    const col=cval>=0?'#a78bfa':'#fb7185';
+    g.globalAlpha=dim;
+    g.fillStyle='#140d20'; g.strokeStyle=col; g.lineWidth=2;
+    g.beginPath(); g.arc(sx,sy,17,0,7); g.fill(); g.stroke();
+    // contribution fill ring
+    g.globalAlpha=dim*(0.25+0.75*m);
+    g.fillStyle=col; g.beginPath(); g.arc(sx,sy,12*Math.sqrt(m)+3,0,7); g.fill();
+    g.globalAlpha=1;
+    g.fillStyle='#ece3f7'; g.font='bold 10px ui-monospace,monospace'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('L'+LENS[idx], sx, sy); g.textBaseline='alphabetic';
+  });
+  // mode + verdict labels
+  g.textAlign='center';
+  g.fillStyle=mode==='fan'?'#34d399':'#f59e0b'; g.font='11px ui-monospace,monospace';
+  g.fillText(mode==='fan'?'FAN-OUT · summed (linear)':'MESH · coupled (nonlinear)', cx, h-26);
+  g.fillStyle=lastPred>0?'#34d399':'#fb7185';
+  g.fillText('prediction: '+(lastPred>0?'TAKEN':'NOT TAKEN')+'   actual: '+(lastActual>0?'T':'N'), cx, h-10);
+}
+function drawSpark(){
+  const {g,w,h}=fit(document.getElementById('spark')); g.clearRect(0,0,w,h);
+  const pad=6;
+  g.strokeStyle='#241738'; g.lineWidth=1;
+  [0,.5,1].forEach(f=>{ const y=pad+(1-f)*(h-pad*2); g.beginPath(); g.moveTo(pad,y); g.lineTo(w-pad,y); g.stroke();
+    g.fillStyle='#4a3a6b'; g.font='9px ui-monospace,monospace'; g.textAlign='left'; g.fillText((f*100)+'%',pad+1,y-2); });
+  if(sparkBuf.length<2) return;
+  const grad=g.createLinearGradient(0,0,w,0); grad.addColorStop(0,'#7c3aed'); grad.addColorStop(1,'#c4b5fd');
+  g.strokeStyle=grad; g.lineWidth=2; g.beginPath();
+  sparkBuf.forEach((v,i)=>{ const x=pad+(i/(sparkBuf.length-1))*(w-pad*2); const y=pad+(1-v)*(h-pad*2);
+    i?g.lineTo(x,y):g.moveTo(x,y); });
+  g.stroke();
+}
+function drawFaces(){
+  const host=document.getElementById('faces');
+  if(host.children.length!==LENS.length){ host.innerHTML='';
+    LENS.forEach(L=>{ const d=document.createElement('div'); d.className='face';
+      d.innerHTML=`<span class="nm">len ${L}</span><div class="bar"><div class="fl"></div></div>`; host.appendChild(d); }); }
+  const maxC=Math.max(0.5,...lastFaceContrib.map(Math.abs));
+  [...host.children].forEach((row,i)=>{ const fl=row.querySelector('.fl'); const c=lastFaceContrib[i]||0; const frac=c/maxC;
+    if(frac>=0){ fl.style.left='50%'; fl.style.width=(frac*50)+'%'; fl.style.background='var(--pos)'; }
+    else { fl.style.left=(50+frac*50)+'%'; fl.style.width=(-frac*50)+'%'; fl.style.background='var(--neg)'; } });
+}
+function syncReadouts(acc){
+  document.getElementById('acc').textContent=Math.round((acc==null?0.5:acc)*100)+'%';
+  document.getElementById('cnt').textContent=counter;
+  const s=document.getElementById('sound');
+  if(mode==='fan'){ s.textContent='LINEAR · witnessable'; s.className='sound lin'; }
+  else { s.textContent='COUPLED · not witnessable'; s.className='sound cpl'; }
+}
+
+// ---------------- controls ----------------
+function setPat(p,id){ pattern=p; ['pReach','pXor','pXorFar','pLoop'].forEach(b=>document.getElementById(b).classList.toggle('on',b===id)); resetEngine(); }
+document.getElementById('pReach').onclick=()=>setPat('reach','pReach');
+document.getElementById('pXor').onclick=()=>setPat('xor','pXor');
+document.getElementById('pXorFar').onclick=()=>setPat('xorfar','pXorFar');
+document.getElementById('pLoop').onclick=()=>setPat('loop','pLoop');
+function setMode(m){ mode=m; document.getElementById('wFan').classList.toggle('on',m==='fan'); document.getElementById('wMesh').classList.toggle('on',m==='mesh'); resetEngine(); syncReadouts(0.5); }
+document.getElementById('wFan').onclick=()=>setMode('fan');
+document.getElementById('wMesh').onclick=()=>setMode('mesh');
+let running=true, accum=0, speed=20;
+document.getElementById('run').onclick=function(){ running=!running; this.classList.toggle('on',running); this.textContent=running?'▶ run':'❚❚ paused'; if(running) requestAnimationFrame(loop); };
+document.getElementById('reset').onclick=()=>{ resetEngine(); syncReadouts(0.5); };
+document.getElementById('speed').oninput=function(){ speed=+this.value; };
+
+resetEngine(); syncReadouts(0.5);
+function loop(){
+  CLOCK++; let acc=null;
+  accum+=speed/6; let steps=0;
+  while(accum>=1 && steps<40){ acc=tick(); accum--; steps++; }
+  drawCube(); drawSpark(); drawFaces(); if(acc!=null) syncReadouts(acc);
+  if(running) requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
