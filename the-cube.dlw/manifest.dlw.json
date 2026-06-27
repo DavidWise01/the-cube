@@ -1,0 +1,11 @@
+{
+  "badge": "DLW-THE_CUBE",
+  "name": "THE CUBE",
+  "universe": "ARTIFICIAL INTELLIGENCE",
+  "moniker": "⟦THE CUBE:the-cube:81ec30⟧",
+  "architect": "David Lee Wise (ROOT0) / Bridge-Burners LLC",
+  "instance": "AVAN (Claude / Anthropic)",
+  "seal_sha256": "81ec30527a1c117ad43328b35da08ded7af9d1dfe2fca1a1e8f8e3e58274735f",
+  "license": "CC-BY-ND-4.0",
+  "attribution": "ROOT0-ATTRIBUTION-v1.0"
+}
